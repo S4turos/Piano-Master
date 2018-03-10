@@ -1,4 +1,4 @@
-var n = findGetParameter("notas");
+var n = findGetParameter("negras");
 var clef = findGetParameter("clave");
 var escala = findGetParameter('escala');
 var intervalos = findGetParameter('intervalos');
@@ -30,7 +30,12 @@ if(escala == 'sol_mayor'){
 	var key_signature = 'C';
 }
 
-VF = Vex.Flow;
+var VF = Vex.Flow;
+var div = document.getElementById("stave");
+var renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
+renderer.resize(800, 350);
+var context = renderer.getContext();
+
 var sol, fa;
 
 function randomNote(clef){
@@ -51,7 +56,7 @@ function fillNotes(clef, n){
 	
 	for (i = 0; i < n; i++) {
 		correctas.push(randomNote(clef));
-		voz.push(new VF.StaveNote({clef: clef, keys: [correctas[i]], duration: "q" }));
+		voz.push(new VF.StaveNote({clef: clef, keys: [correctas[i]], duration: "q", auto_stem: true }));
 	}
 	
 	return [voz, correctas];
@@ -78,34 +83,17 @@ function cortar(clave, corte){
 	
 }
 
-function loadTreble(){
-	var div = document.getElementById("treble")
-	var renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
-	renderer.resize(800, 150);
-	var context = renderer.getContext();
-	var stave = new VF.Stave(10, 30, 750);
-	stave.addClef("treble").addKeySignature(key_signature);
+function loadStave(x, y, width, clef, notes){
+	var stave = new VF.Stave(x, y, width);
+	stave.addClef(clef).addKeySignature(key_signature);
 	stave.setContext(context).draw();
-	sol = fillNotes("treble", n);
+	notes = fillNotes(clef, n);
 	var voice = new VF.Voice({num_beats: n,  beat_value: 4});
-	voice.addTickables(sol[0]);
+	voice.addTickables(notes[0]);
 	var formatter = new VF.Formatter().joinVoices([voice]).format([voice], 700);
 	voice.draw(context, stave);
-}
-
-function loadBass(){
-	var div = document.getElementById("bass")
-	var renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
-	renderer.resize(800, 150);
-	var context = renderer.getContext();
-	var stave = new VF.Stave(10, 30, 750);
-	stave.addClef("bass").addKeySignature(key_signature);
-	stave.setContext(context).draw();
-	fa = fillNotes("bass", n);
-	var voice = new VF.Voice({num_beats: n,  beat_value: 4});
-	voice.addTickables(fa[0]);
-	var formatter = new VF.Formatter().joinVoices([voice]).format([voice], 700);
-	voice.draw(context, stave);
+	
+	return stave;
 }
 
 
@@ -118,10 +106,16 @@ if(intervalos != null){
 
 
 if(clef == "sol"){
-	loadTreble();
+	loadStave(20, 80, 750, "treble", sol);
 }else if(clef == "fa"){
-	loadBass();
+	loadStave(20, 80, 750, "bass", fa);
 }else if(clef == "solfa" || clef == null){
-	loadTreble();
-	loadBass();
+	var treble = loadStave(20, 0, 750, "treble", sol);
+	var bass = loadStave(20, 150, 750, "bass", fa);
+	var brace = new Vex.Flow.StaveConnector(treble, bass).setType(3);
+	var lineLeft = new Vex.Flow.StaveConnector(treble, bass).setType(1);
+	var lineRight = new Vex.Flow.StaveConnector(treble, bass).setType(6);
+	brace.setContext(context).draw();
+	lineLeft.setContext(context).draw();
+	lineRight.setContext(context).draw();
 }
