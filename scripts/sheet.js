@@ -83,17 +83,16 @@ function cortar(clave, corte){
 	
 }
 
-function loadStave(x, y, width, clef, notes){
+function loadStave(x, y, width, clef){
 	var stave = new VF.Stave(x, y, width);
 	stave.addClef(clef).addKeySignature(key_signature);
 	stave.setContext(context).draw();
-	notes = fillNotes(clef, n);
+	var notes = fillNotes(clef, n);
 	var voice = new VF.Voice({num_beats: n,  beat_value: 4});
 	voice.addTickables(notes[0]);
 	var formatter = new VF.Formatter().joinVoices([voice]).format([voice], 700);
 	voice.draw(context, stave);
-	
-	return stave;
+	return [stave, notes];
 }
 
 
@@ -106,15 +105,19 @@ if(intervalos != null){
 
 
 if(clef == "sol"){
-	loadStave(20, 80, 750, "treble", sol);
+	var treble = loadStave(20, 80, 750, "treble");
+	sol = treble[1];
 }else if(clef == "fa"){
-	loadStave(20, 80, 750, "bass", fa);
+	var bass = loadStave(20, 80, 750, "bass");
+	fa = bass[1];
 }else if(clef == "solfa" || clef == null){
-	var treble = loadStave(20, 0, 750, "treble", sol);
-	var bass = loadStave(20, 150, 750, "bass", fa);
-	var brace = new Vex.Flow.StaveConnector(treble, bass).setType(3);
-	var lineLeft = new Vex.Flow.StaveConnector(treble, bass).setType(1);
-	var lineRight = new Vex.Flow.StaveConnector(treble, bass).setType(6);
+	var treble = loadStave(20, 0, 750, "treble");
+	var bass = loadStave(20, 150, 750, "bass");
+	sol = treble[1];
+	fa = bass[1];
+	var brace = new Vex.Flow.StaveConnector(treble[0], bass[0]).setType(3);
+	var lineLeft = new Vex.Flow.StaveConnector(treble[0], bass[0]).setType(1);
+	var lineRight = new Vex.Flow.StaveConnector(treble[0], bass[0]).setType(6);
 	brace.setContext(context).draw();
 	lineLeft.setContext(context).draw();
 	lineRight.setContext(context).draw();

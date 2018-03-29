@@ -117,7 +117,6 @@ function wrongKey(){
 }
 
 function checkKeys(){
-	
 	if(clef == "sol"){
 		if(code[sol[1][x]] == keys[0] && keys.length == 1){
 			rightKey();
